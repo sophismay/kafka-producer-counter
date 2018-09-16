@@ -1,0 +1,64 @@
+version: "2"
+services:
+ mongo:
+  image: mongo
+  ports:
+   - "27017:27017"
+  restart: always
+  networks:
+   - voicefront_default
+ kafka:
+  image: wurstmeister/kafka
+  ports:
+   - "9092:9092"
+   - "39092:39092"
+  depends_on:
+   - zookeeper
+  environment:
+   #- KAFKA_ADVERTISED_HOST_NAME=localhost
+   #- KAFKA_HOST_NAME=localhost
+   #- KAFKA_CREATE_TOPICS="Topic1:1:1"
+   - KAFKA_ZOOKEEPER_CONNECT=zookeeper
+   - KAFKA_LISTENERS=INTERNAL://:39092
+   - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:39092
+   - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+   - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=EXTERNAL:SSL,INTERNAL:PLAINTEXT
+  volumes:
+   - ./volumes/kafka/:/var/lib/kafka/data
+  networks:
+   - apps_devenv
+ zookeeper:
+  image: 'bitnami/zookeeper:latest'
+  ports:
+   - '2181:2181'
+  environment:
+   - ALLOW_ANONYMOUS_LOGIN=yes
+  volumes:
+   - ./volumes/zookeeper/:/bitnami/zookeeper
+   - ./volumes/zk-data:/var/lib/zookeeper/data
+   - ./volumes/zk-data:/bitnami/zookeeper
+   - ./volumes/zk-txn-logs:/var/lib/zookeeper/log
+  networks:
+   - apps_devenv
+ producer_counter:
+  build: ./KafkaCounterProducerJava
+  ports:
+   - 8083:8083
+  depends_on:
+   - kafka
+  links:
+   - kafka
+  environment:
+   - BOOTSTRAP_SERVERS=kafka:39092
+   - ACKS=all
+   - RETRIES=3
+   - MAX_NUM=100
+   - TOPIC=Counter
+  networks:
+   - apps_devenv  
+
+networks:
+ voicefront_default:
+  driver: bridge
+ apps_devenv:
+  driver: bridge
