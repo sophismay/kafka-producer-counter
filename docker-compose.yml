@@ -1,23 +1,12 @@
 version: "2"
 services:
- mongo:
-  image: mongo
-  ports:
-   - "27017:27017"
-  restart: always
-  networks:
-   - voicefront_default
  kafka:
   image: wurstmeister/kafka
   ports:
-   - "9092:9092"
    - "39092:39092"
   depends_on:
    - zookeeper
   environment:
-   #- KAFKA_ADVERTISED_HOST_NAME=localhost
-   #- KAFKA_HOST_NAME=localhost
-   #- KAFKA_CREATE_TOPICS="Topic1:1:1"
    - KAFKA_ZOOKEEPER_CONNECT=zookeeper
    - KAFKA_LISTENERS=INTERNAL://:39092
    - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:39092
@@ -41,12 +30,8 @@ services:
   networks:
    - apps_devenv
  producer_counter:
-  build: ./KafkaCounterProducerJava
-  ports:
-   - 8083:8083
+  build: .
   depends_on:
-   - kafka
-  links:
    - kafka
   environment:
    - BOOTSTRAP_SERVERS=kafka:39092
@@ -58,7 +43,5 @@ services:
    - apps_devenv  
 
 networks:
- voicefront_default:
-  driver: bridge
  apps_devenv:
   driver: bridge
