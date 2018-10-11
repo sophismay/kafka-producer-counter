@@ -1,5 +1,18 @@
 version: "2"
 services:
+ cloudera:
+  image: cloudera/quickstart
+  ports:
+  - "7018:7018"
+  - "8888:8888"
+  hostname: "quickstart.cloudera"
+  privileged: true
+  command: /usr/bin/docker-quickstart
+  tty: true
+  networks:
+   - apps_devenv
+  #volumes:
+  # - ./volumes/cloudera/:/
  kafka:
   image: wurstmeister/kafka
   ports:
